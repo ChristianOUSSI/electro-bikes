@@ -5,8 +5,9 @@ import { computeTotals } from "@/lib/format";
 import { CustomerInfo, Order, OrderItem } from "@/lib/types";
 
 interface OrderPayload {
-  items: { productId: string; quantite: number }[];
+  items: { productId: string; quantite: number; selectedOptions?: string[]; optionCost?: number }[];
   client: CustomerInfo;
+  bonusDeducted?: number;
 }
 
 export function GET() {
@@ -64,18 +65,26 @@ export async function POST(request: NextRequest) {
       nom: product.nom,
       prix: product.prix,
       quantite: line.quantite,
+      selectedOptions: line.selectedOptions,
+      optionCost: line.optionCost,
     });
   }
 
-  const sousTotal = orderItems.reduce((s, i) => s + i.prix * i.quantite, 0);
-  const { livraison, tva, total } = computeTotals(sousTotal);
+  const sousTotal = orderItems.reduce(
+    (s, i) => s + (i.prix + (i.optionCost || 0)) * i.quantite,
+    0
+  );
+  const bonusDeducted = payload.bonusDeducted || 0;
+  const { livraison, tva, total } = computeTotals(sousTotal, bonusDeducted);
 
   const order: Order = {
     id: `EV-${Date.now().toString(36).toUpperCase()}`,
     items: orderItems,
     sousTotal,
+    bonusDeducted,
     livraison,
     tva: Math.round(tva * 100) / 100,
+    immatriculation: 0,
     total,
     statut: "confirmed",
     client: payload.client,

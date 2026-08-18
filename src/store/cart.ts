@@ -6,11 +6,13 @@ import { persist } from "zustand/middleware";
 export interface CartLine {
   productId: string;
   quantite: number;
+  selectedOptions?: string[]; // IDs of options
+  optionCost?: number;
 }
 
 interface CartState {
   items: CartLine[];
-  addItem: (productId: string, quantite?: number) => void;
+  addItem: (productId: string, quantite?: number, selectedOptions?: string[], optionCost?: number) => void;
   removeItem: (productId: string) => void;
   setQuantity: (productId: string, quantite: number) => void;
   clear: () => void;
@@ -21,19 +23,19 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      addItem: (productId, quantite = 1) =>
+      addItem: (productId, quantite = 1, selectedOptions = [], optionCost = 0) =>
         set((state) => {
-          const existing = state.items.find((i) => i.productId === productId);
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.productId === productId
-                  ? { ...i, quantite: i.quantite + quantite }
-                  : i
-              ),
-            };
+          const existingIndex = state.items.findIndex(
+            (i) =>
+              i.productId === productId &&
+              JSON.stringify(i.selectedOptions || []) === JSON.stringify(selectedOptions)
+          );
+          if (existingIndex > -1) {
+            const updated = [...state.items];
+            updated[existingIndex].quantite += quantite;
+            return { items: updated };
           }
-          return { items: [...state.items, { productId, quantite }] };
+          return { items: [...state.items, { productId, quantite, selectedOptions, optionCost }] };
         }),
       removeItem: (productId) =>
         set((state) => ({
