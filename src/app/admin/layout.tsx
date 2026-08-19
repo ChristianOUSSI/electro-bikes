@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Electro Bikes Admin",
   },
+  mobileWebApp: {
+    capable: true,
+  },
 };
 
 export default function RootLayout({

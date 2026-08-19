@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageSquare, X, Send, Minimize2, Maximize2, GripVertical, Sparkles } from "lucide-react";
 import { createChatSession, addChatMessage, getVisitorUnreadCount, subscribeToChatUpdates } from "@/lib/chat";
 
@@ -18,17 +18,15 @@ export default function ChatWidget() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hasMoved, setHasMoved] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const visitorIdRef = useRef<string>(`visitor-${Date.now()}`);
-  const lastUpdateTimeRef = useRef<number>(0);
 
-  const scrollToBottom = useCallback(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  };
 
-  const handleMouseDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -40,9 +38,9 @@ export default function ChatWidget() {
       x: clientX - rect.left,
       y: clientY - rect.top
     });
-  }, []);
+  };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -51,12 +49,10 @@ export default function ChatWidget() {
     const newX = clientX - dragStart.x;
     const newY = clientY - dragStart.y;
 
-    // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
     if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
       setHasMoved(true);
     }
 
-    // Keep button within viewport bounds
     const maxX = window.innerWidth - 80;
     const maxY = window.innerHeight - 80;
 
@@ -64,26 +60,21 @@ export default function ChatWidget() {
       x: Math.max(0, Math.min(newX, maxX)),
       y: Math.max(0, Math.min(newY, maxY))
     });
-  }, [isDragging, dragStart, position]);
+  };
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     setIsDragging(false);
-  }, []);
+  };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen, scrollToBottom]);
+  }, [messages, isOpen]);
 
-  // Subscribe to real-time chat updates
+  // Subscribe to real-time chat updates - only when chat is open
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || !isOpen) return;
 
     const unsubscribe = subscribeToChatUpdates(() => {
-      // Throttle updates to avoid excessive re-renders
-      const now = Date.now();
-      if (now - lastUpdateTimeRef.current < 100) return; // 100ms throttle
-      lastUpdateTimeRef.current = now;
-
       // Reload messages when chat updates
       const session = (window as any).getChatSession?.(sessionId);
       if (session) {
@@ -94,8 +85,24 @@ export default function ChatWidget() {
       }
     });
 
-    return () => unsubscribe();
-  }, [sessionId]);
+    return () => {
+      unsubscribe();
+    };
+  }, [sessionId, isOpen]);
+
+  // Separate effect for unread count when chat is closed
+  useEffect(() => {
+    if (isOpen) return; // Don't update unread count when chat is open
+
+    const unsubscribe = subscribeToChatUpdates(() => {
+      const unread = getVisitorUnreadCount(visitorIdRef.current);
+      setUnreadCount(unread);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -104,7 +111,6 @@ export default function ChatWidget() {
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
 
-      // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
       if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
         setHasMoved(true);
       }
@@ -125,7 +131,6 @@ export default function ChatWidget() {
       const newX = touch.clientX - dragStart.x;
       const newY = touch.clientY - dragStart.y;
 
-      // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
       if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
         setHasMoved(true);
       }
@@ -157,9 +162,9 @@ export default function ChatWidget() {
       window.removeEventListener('touchmove', handleGlobalTouchMove);
       window.removeEventListener('touchend', handleGlobalMouseUp);
     };
-  }, [isDragging, dragStart.x, dragStart.y, position.x, position.y]);
+  }, [isDragging, dragStart, position]);
 
-  const handleRegister = useCallback(async () => {
+  const handleRegister = () => {
     if (!visitorInfo.name.trim()) {
       alert("Veuillez entrer votre nom");
       return;
@@ -175,19 +180,21 @@ export default function ChatWidget() {
     setIsRegistered(true);
 
     // Add welcome message
-    const welcomeMsg = addChatMessage(session.id, {
-      visitorId: session.visitorId,
-      visitorName: visitorInfo.name,
-      visitorEmail: visitorInfo.email,
-      message: `Bonjour ${visitorInfo.name} ! Bienvenue sur Electro Bikes. Comment puis-je vous aider concernant nos vélos et motos électriques ?`,
-      isAdmin: true,
-      read: false
-    });
+    setTimeout(() => {
+      const welcomeMsg = addChatMessage(session.id, {
+        visitorId: session.visitorId,
+        visitorName: visitorInfo.name,
+        visitorEmail: visitorInfo.email,
+        message: `Bonjour ${visitorInfo.name} ! Bienvenue sur Electro Bikes. Comment puis-je vous aider concernant nos vélos et motos électriques ?`,
+        isAdmin: true,
+        read: false
+      });
 
-    setMessages([welcomeMsg]);
-  }, [visitorInfo.name, visitorInfo.email]);
+      setMessages([welcomeMsg]);
+    }, 0);
+  };
 
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = () => {
     if (!message.trim() || !sessionId) return;
 
     const userMessage = addChatMessage(sessionId, {
@@ -224,31 +231,23 @@ export default function ChatWidget() {
       setMessages(prev => [...prev, adminResponse]);
       setIsTyping(false);
     }, 1500);
-  }, [message, sessionId, visitorInfo.name, visitorInfo.email]);
+  };
 
-  const handleVisitorInfoChange = useCallback((field: 'name' | 'email', value: string) => {
-    setVisitorInfo(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
-  }, []);
-
-  const handleToggleOpen = useCallback(() => {
+  const handleToggleOpen = () => {
     if (!hasMoved) {
       setIsOpen(true);
     }
-  }, [hasMoved]);
+  };
 
-  const handleToggleMinimize = useCallback(() => {
+  const handleToggleMinimize = () => {
     setIsMinimized(prev => !prev);
-  }, []);
+  };
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setIsOpen(false);
-  }, []);
+  };
 
-  const handleHeaderDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const handleHeaderDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -260,7 +259,7 @@ export default function ChatWidget() {
       x: clientX - rect.left,
       y: clientY - rect.top
     });
-  }, []);
+  };
 
   return (
     <>
@@ -270,6 +269,10 @@ export default function ChatWidget() {
           ref={buttonRef}
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchEnd={handleMouseUp}
           className="fixed z-[9999] cursor-move touch-none"
           style={{
             right: position.x === 0 ? '1.5rem' : 'auto',
@@ -362,24 +365,20 @@ export default function ChatWidget() {
                         <h4 className="text-white font-semibold mb-2">Bienvenue !</h4>
                         <p className="text-gray-400 text-sm">Comment pouvons-nous vous aider ?</p>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <input
                           type="text"
                           placeholder="Votre nom *"
                           value={visitorInfo.name}
-                          onChange={(e) => handleVisitorInfoChange('name', e.target.value)}
-                          onFocus={() => setIsInputFocused(true)}
-                          onBlur={() => setIsInputFocused(false)}
+                          onChange={(e) => setVisitorInfo(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                         />
                         <input
                           type="email"
                           placeholder="Votre email (optionnel)"
                           value={visitorInfo.email}
-                          onChange={(e) => handleVisitorInfoChange('email', e.target.value)}
-                          onFocus={() => setIsInputFocused(true)}
-                          onBlur={() => setIsInputFocused(false)}
+                          onChange={(e) => setVisitorInfo(prev => ({ ...prev, email: e.target.value }))}
                           className="w-full bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                         />
                         <button
@@ -441,17 +440,15 @@ export default function ChatWidget() {
                       <input
                         type="text"
                         value={message}
-                        onChange={handleMessageChange}
+                        onChange={(e) => setMessage(e.target.value)}
                         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                        onFocus={() => setIsInputFocused(true)}
-                        onBlur={() => setIsInputFocused(false)}
                         placeholder="Écrivez votre message..."
                         className="flex-1 bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                       />
                       <button
                         onClick={handleSendMessage}
                         disabled={!message.trim()}
-                        className="p-2 bg-gradient-to-r from-[#c8ff00] to-[#a0cc00] hover:from-[#a0cc00] hover:to-[#8bb800] disabled:from-gray-600 disabled:to-gray-700 text-black rounded-lg transition-all duration-300 shadow-[#c8ff00]/20 hover:shadow-[#c8ff00]/30"
+                        className="bg-gradient-to-r from-[#c8ff00] to-[#a0cc00] hover:from-[#a0cc00] hover:to-[#8bb800] text-black p-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Send className="w-5 h-5" />
                       </button>

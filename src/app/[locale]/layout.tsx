@@ -81,6 +81,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Electro Bikes",
   },
+  mobileWebApp: {
+    capable: true,
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",

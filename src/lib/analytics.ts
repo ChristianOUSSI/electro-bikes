@@ -37,19 +37,70 @@ interface PageViewData {
 const VISITORS_KEY = 'analytics_visitors';
 const PAGE_VIEWS_KEY = 'analytics_page_views';
 const ACTIVE_SESSIONS_KEY = 'analytics_active_sessions';
+const MAX_VISITORS = 1000; // Limit to prevent quota exceeded
+
+// Safe localStorage operations with quota handling
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.error('localStorage get error:', e);
+    return null;
+  }
+}
+
+function safeSetItem(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.error('localStorage set error:', e);
+    // If quota exceeded, try to clear old data
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      console.warn('Quota exceeded, attempting cleanup');
+      cleanupOldData();
+    }
+    return false;
+  }
+}
+
+function cleanupOldData() {
+  try {
+    // Remove old visitors (older than 30 days)
+    const visitorsData = safeGetItem(VISITORS_KEY);
+    if (visitorsData) {
+      const visitors = JSON.parse(visitorsData);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const filteredVisitors = visitors.filter((v: VisitorData) => {
+        return new Date(v.createdAt) > thirtyDaysAgo;
+      });
+
+      // Keep only the most recent visitors if still too many
+      if (filteredVisitors.length > MAX_VISITORS) {
+        filteredVisitors.splice(0, filteredVisitors.length - MAX_VISITORS);
+      }
+
+      safeSetItem(VISITORS_KEY, JSON.stringify(filteredVisitors));
+    }
+  } catch (e) {
+    console.error('Error cleaning up old data:', e);
+  }
+}
 
 // Initialize storage
 function initializeStorage() {
   if (typeof window === 'undefined') return;
-  
-  if (!localStorage.getItem(VISITORS_KEY)) {
-    localStorage.setItem(VISITORS_KEY, JSON.stringify([]));
+
+  if (!safeGetItem(VISITORS_KEY)) {
+    safeSetItem(VISITORS_KEY, JSON.stringify([]));
   }
-  if (!localStorage.getItem(PAGE_VIEWS_KEY)) {
-    localStorage.setItem(PAGE_VIEWS_KEY, JSON.stringify([]));
+  if (!safeGetItem(PAGE_VIEWS_KEY)) {
+    safeSetItem(PAGE_VIEWS_KEY, JSON.stringify([]));
   }
-  if (!localStorage.getItem(ACTIVE_SESSIONS_KEY)) {
-    localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify({}));
+  if (!safeGetItem(ACTIVE_SESSIONS_KEY)) {
+    safeSetItem(ACTIVE_SESSIONS_KEY, JSON.stringify({}));
   }
 }
 
@@ -57,16 +108,24 @@ function initializeStorage() {
 export function getAllVisitors(): VisitorData[] {
   if (typeof window === 'undefined') return [];
   initializeStorage();
-  const data = localStorage.getItem(VISITORS_KEY);
+  const data = safeGetItem(VISITORS_KEY);
   return data ? JSON.parse(data) : [];
 }
 
-// Save all visitors
+// Save all visitors with quota handling
 function saveVisitors(visitors: VisitorData[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(VISITORS_KEY, JSON.stringify(visitors));
-  // Trigger storage event for cross-tab sync
-  window.dispatchEvent(new Event('storage'));
+
+  // Limit number of visitors to prevent quota exceeded
+  if (visitors.length > MAX_VISITORS) {
+    visitors = visitors.slice(-MAX_VISITORS); // Keep most recent
+  }
+
+  const success = safeSetItem(VISITORS_KEY, JSON.stringify(visitors));
+  if (success) {
+    // Trigger storage event for cross-tab sync
+    window.dispatchEvent(new Event('storage'));
+  }
 }
 
 // Track a new visitor
@@ -95,12 +154,12 @@ export function trackVisitor(visitorData: Omit<VisitorData, 'id' | 'createdAt' |
   saveVisitors(visitors);
 
   // Store as active session
-  const activeSessions = JSON.parse(localStorage.getItem(ACTIVE_SESSIONS_KEY) || '{}');
+  const activeSessions = JSON.parse(safeGetItem(ACTIVE_SESSIONS_KEY) || '{}');
   activeSessions[visitor.sessionId] = {
     visitorId: visitor.id,
     lastActivity: visitor.lastActivity
   };
-  localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(activeSessions));
+  safeSetItem(ACTIVE_SESSIONS_KEY, JSON.stringify(activeSessions));
 
   return visitor;
 }
@@ -124,11 +183,11 @@ export function updateVisitorActivity(visitorId: string, currentPage: string): v
     saveVisitors(visitors);
 
     // Update active session
-    const activeSessions = JSON.parse(localStorage.getItem(ACTIVE_SESSIONS_KEY) || '{}');
+    const activeSessions = JSON.parse(safeGetItem(ACTIVE_SESSIONS_KEY) || '{}');
     const sessionId = visitor.sessionId;
     if (activeSessions[sessionId]) {
       activeSessions[sessionId].lastActivity = visitor.lastActivity;
-      localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(activeSessions));
+      safeSetItem(ACTIVE_SESSIONS_KEY, JSON.stringify(activeSessions));
     }
   }
 }
@@ -153,7 +212,7 @@ export function getVisitors(filters?: { period?: string; status?: string }): Vis
   }
 
   // Get active sessions
-  const activeSessions = JSON.parse(localStorage.getItem(ACTIVE_SESSIONS_KEY) || '{}');
+  const activeSessions = JSON.parse(safeGetItem(ACTIVE_SESSIONS_KEY) || '{}');
   const activeSessionIds = Object.values(activeSessions).map((s: any) => s.visitorId);
 
   if (filters?.status === 'active') {
@@ -181,7 +240,7 @@ export function getActiveVisitorCount(): number {
     }
   });
   
-  localStorage.setItem(ACTIVE_SESSIONS_KEY, JSON.stringify(cleanedSessions));
+  safeSetItem(ACTIVE_SESSIONS_KEY, JSON.stringify(cleanedSessions));
   
   return Object.keys(cleanedSessions).length;
 }
@@ -283,8 +342,8 @@ export function getAnalyticsData(period: string) {
 export function exportAnalyticsData() {
   return {
     visitors: getAllVisitors(),
-    pageViews: JSON.parse(localStorage.getItem(PAGE_VIEWS_KEY) || '[]'),
-    activeSessions: JSON.parse(localStorage.getItem(ACTIVE_SESSIONS_KEY) || '{}'),
+    pageViews: JSON.parse(safeGetItem(PAGE_VIEWS_KEY) || '[]'),
+    activeSessions: JSON.parse(safeGetItem(ACTIVE_SESSIONS_KEY) || '{}'),
     exportedAt: new Date().toISOString()
   };
 }
