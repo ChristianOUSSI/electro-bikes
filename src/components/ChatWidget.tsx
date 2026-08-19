@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, X, Send, Minimize2, Maximize2, GripVertical, Sparkles } from "lucide-react";
-import { createChatSession, addChatMessage } from "@/lib/admin";
+import { createChatSession, addChatMessage, getVisitorUnreadCount, subscribeToChatUpdates } from "@/lib/chat";
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,8 +17,10 @@ export default function ChatWidget() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hasMoved, setHasMoved] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
+  const visitorIdRef = useRef<string>(`visitor-${Date.now()}`);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -69,6 +71,24 @@ export default function ChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
+
+  // Subscribe to real-time chat updates
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const unsubscribe = subscribeToChatUpdates(() => {
+      // Reload messages when chat updates
+      const session = (window as any).getChatSession?.(sessionId);
+      if (session) {
+        setMessages(session.messages);
+        // Check for unread admin messages
+        const unread = getVisitorUnreadCount(visitorIdRef.current);
+        setUnreadCount(unread);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [sessionId]);
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -139,14 +159,14 @@ export default function ChatWidget() {
     }
 
     const session = createChatSession(
-      `visitor-${Date.now()}`,
+      visitorIdRef.current,
       visitorInfo.name,
       visitorInfo.email || undefined
     );
-    
+
     setSessionId(session.id);
     setIsRegistered(true);
-    
+
     // Add welcome message
     const welcomeMsg = addChatMessage(session.id, {
       visitorId: session.visitorId,
@@ -156,7 +176,7 @@ export default function ChatWidget() {
       isAdmin: true,
       read: false
     });
-    
+
     setMessages([welcomeMsg]);
   };
 
@@ -164,7 +184,7 @@ export default function ChatWidget() {
     if (!message.trim() || !sessionId) return;
 
     const userMessage = addChatMessage(sessionId, {
-      visitorId: `visitor-${Date.now()}`,
+      visitorId: visitorIdRef.current,
       visitorName: visitorInfo.name,
       visitorEmail: visitorInfo.email,
       message: message.trim(),
@@ -176,7 +196,7 @@ export default function ChatWidget() {
     setMessage("");
     setIsTyping(true);
 
-    // Simulate admin response (in production, this would be real-time)
+    // Simulate admin response (in production, this would be real-time from admin panel)
     setTimeout(() => {
       const responses = [
         "Merci pour votre message ! Un conseiller spécialisé en véhicules électriques va vous répondre rapidement.",
@@ -184,16 +204,16 @@ export default function ChatWidget() {
         "Compris, je transmets votre demande à notre équipe technique spécialisée.",
         "Je vais vérifier les informations sur nos modèles électriques pour vous tout de suite."
       ];
-      
+
       const adminResponse = addChatMessage(sessionId, {
-        visitorId: `visitor-${Date.now()}`,
+        visitorId: visitorIdRef.current,
         visitorName: visitorInfo.name,
         visitorEmail: visitorInfo.email,
         message: responses[Math.floor(Math.random() * responses.length)],
         isAdmin: true,
         read: false
       });
-      
+
       setMessages(prev => [...prev, adminResponse]);
       setIsTyping(false);
     }, 1500);
@@ -230,6 +250,11 @@ export default function ChatWidget() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#c8ff00]/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <MessageSquare className="w-6 h-6 relative z-10 text-[#c8ff00]" />
             <Sparkles className="absolute -top-2 -right-2 w-4 h-4 text-[#c8ff00] animate-pulse" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       )}

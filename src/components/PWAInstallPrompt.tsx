@@ -8,6 +8,7 @@ export default function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
     // Check if running as PWA
@@ -24,27 +25,53 @@ export default function PWAInstallPrompt() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(isIOSDevice);
 
-    // Show prompt after 5 seconds if not installed
-    const timer = setTimeout(() => {
-      if (!isInStandaloneMode) {
-        setShowPrompt(true);
-      }
-    }, 5000);
-
     // Listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      setCanInstall(true);
+      // Show prompt immediately when event fires
       setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    // Listen for appinstalled
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setShowPrompt(false);
+      setDeferredPrompt(null);
     };
-  }, []);
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // For non-iOS devices, show prompt after 5 seconds if install prompt hasn't fired
+    if (!isIOSDevice) {
+      const timer = setTimeout(() => {
+        if (!canInstall && !isInStandaloneMode) {
+          setShowPrompt(true);
+        }
+      }, 5000);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
+      };
+    } else {
+      // For iOS, show prompt after 5 seconds
+      const timer = setTimeout(() => {
+        if (!isInStandaloneMode) {
+          setShowPrompt(true);
+        }
+      }, 5000);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('appinstalled', handleAppInstalled);
+      };
+    }
+  }, [canInstall]);
 
   const handleInstall = async () => {
     if (deferredPrompt) {
@@ -55,6 +82,9 @@ export default function PWAInstallPrompt() {
       }
       setDeferredPrompt(null);
       setShowPrompt(false);
+    } else if (!isIOS) {
+      // If no deferred prompt, try to trigger install
+      alert("L'installation n'est pas disponible actuellement. Assurez-vous que vous êtes sur un navigateur compatible (Chrome, Edge, Samsung Internet).");
     }
   };
 
@@ -92,7 +122,9 @@ export default function PWAInstallPrompt() {
               <p className="text-gray-400 text-xs mt-1">
                 {isIOS
                   ? "Ajoutez à l'écran d'accueil pour une expérience optimale"
-                  : "Installez l'application pour un accès rapide"}
+                  : canInstall
+                  ? "Installez l'application pour un accès rapide"
+                  : "PWA disponible pour installation"}
               </p>
             </div>
           </div>
@@ -116,10 +148,15 @@ export default function PWAInstallPrompt() {
         ) : (
           <button
             onClick={handleInstall}
-            className="w-full bg-gradient-to-r from-[#c8ff00] to-[#a0cc00] hover:from-[#a0cc00] hover:to-[#8bb800] text-black font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[#c8ff00]/20 hover:shadow-[#c8ff00]/30"
+            disabled={!canInstall}
+            className={`w-full py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+              canInstall
+                ? "bg-gradient-to-r from-[#c8ff00] to-[#a0cc00] hover:from-[#a0cc00] hover:to-[#8bb800] text-black font-semibold shadow-[#c8ff00]/20 hover:shadow-[#c8ff00]/30"
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+            }`}
           >
             <Download className="w-4 h-4" />
-            Installer maintenant
+            {canInstall ? "Installer maintenant" : "Installation non disponible"}
           </button>
         )}
 

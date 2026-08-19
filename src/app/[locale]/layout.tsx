@@ -12,6 +12,9 @@ import ChatWidget from "@/components/ChatWidget";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import Script from "next/script";
 
+// SVG favicon as data URI
+const svgFavicon = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23c8ff00"/><stop offset="100%" style="stop-color:%23a0cc00"/></linearGradient></defs><rect width="192" height="192" rx="48" fill="%2309090b"/><g transform="translate(32, 32)"><circle cx="32" cy="96" r="24" fill="url(%23grad)"/><circle cx="32" cy="96" r="18" fill="%2309090b"/><circle cx="96" cy="96" r="24" fill="url(%23grad)"/><circle cx="96" cy="96" r="18" fill="%2309090b"/><path d="M32 72 L64 48 L96 48 L96 72 L80 88 L48 88 Z" fill="url(%23grad)"/><rect x="56" y="32" width="8" height="16" rx="4" fill="url(%23grad)"/><ellipse cx="64" cy="56" rx="12" ry="6" fill="url(%23grad)"/><path d="M48 16 L56 32 L64 24 L56 40 L64 56" fill="url(%23grad)"/></g></svg>`;
+
 const geistSans = localFont({
   src: "../fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -68,18 +71,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/icons/icon-72x72.svg", sizes: "72x72", type: "image/svg+xml" },
-      { url: "/icons/icon-96x96.svg", sizes: "96x96", type: "image/svg+xml" },
-      { url: "/icons/icon-128x128.svg", sizes: "128x128", type: "image/svg+xml" },
-      { url: "/icons/icon-144x144.svg", sizes: "144x144", type: "image/svg+xml" },
-      { url: "/icons/icon-152x152.svg", sizes: "152x152", type: "image/svg+xml" },
+      { url: svgFavicon, sizes: "any", type: "image/svg+xml" },
       { url: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
-      { url: "/icons/icon-384x384.svg", sizes: "384x384", type: "image/svg+xml" },
-      { url: "/icons/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml" },
     ],
-    apple: [
-      { url: "/icons/icon-152x152.svg", sizes: "152x152", type: "image/svg+xml" },
-    ],
+    apple: "/icons/icon-152x152.svg",
   },
   appleWebApp: {
     capable: true,

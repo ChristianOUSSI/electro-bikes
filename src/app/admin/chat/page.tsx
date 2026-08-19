@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  MessageSquare, 
-  Send, 
-  Users, 
-  Clock, 
+import {
+  MessageSquare,
+  Send,
+  Users,
+  Clock,
   Check,
   CheckCheck,
   X,
   Phone,
   Mail
 } from "lucide-react";
-import { getChatSessions, addChatMessage, updateChatSessionStatus, markMessagesAsRead } from "@/lib/admin";
+import { getChatSessions, addChatMessage, updateChatSessionStatus, markMessagesAsRead, subscribeToChatUpdates } from "@/lib/chat";
 import AdminLayout from "@/components/AdminLayout";
 
 export default function AdminChat() {
@@ -24,9 +24,18 @@ export default function AdminChat() {
 
   useEffect(() => {
     loadSessions();
-    const interval = setInterval(loadSessions, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
-  }, [filter]);
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToChatUpdates(() => {
+      loadSessions();
+      if (selectedSession) {
+        const updatedSessions = getChatSessions();
+        const updatedSession = updatedSessions.find(s => s.id === selectedSession.id);
+        setSelectedSession(updatedSession);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [filter, selectedSession]);
 
   const loadSessions = () => {
     const statusFilter = filter === "all" ? undefined : filter;
