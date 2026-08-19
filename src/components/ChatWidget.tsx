@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { MessageSquare, X, Send, Minimize2, Maximize2, GripVertical, Sparkles } from "lucide-react";
 import { createChatSession, addChatMessage, getVisitorUnreadCount, subscribeToChatUpdates } from "@/lib/chat";
 
@@ -18,15 +18,17 @@ export default function ChatWidget() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hasMoved, setHasMoved] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const visitorIdRef = useRef<string>(`visitor-${Date.now()}`);
+  const lastUpdateTimeRef = useRef<number>(0);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -38,9 +40,9 @@ export default function ChatWidget() {
       x: clientX - rect.left,
       y: clientY - rect.top
     });
-  };
+  }, []);
 
-  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -62,21 +64,26 @@ export default function ChatWidget() {
       x: Math.max(0, Math.min(newX, maxX)),
       y: Math.max(0, Math.min(newY, maxY))
     });
-  };
+  }, [isDragging, dragStart, position]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen]);
+  }, [messages, isOpen, scrollToBottom]);
 
   // Subscribe to real-time chat updates
   useEffect(() => {
     if (!sessionId) return;
 
     const unsubscribe = subscribeToChatUpdates(() => {
+      // Throttle updates to avoid excessive re-renders
+      const now = Date.now();
+      if (now - lastUpdateTimeRef.current < 100) return; // 100ms throttle
+      lastUpdateTimeRef.current = now;
+
       // Reload messages when chat updates
       const session = (window as any).getChatSession?.(sessionId);
       if (session) {
@@ -150,9 +157,9 @@ export default function ChatWidget() {
       window.removeEventListener('touchmove', handleGlobalTouchMove);
       window.removeEventListener('touchend', handleGlobalMouseUp);
     };
-  }, [isDragging, dragStart, position]);
+  }, [isDragging, dragStart.x, dragStart.y, position.x, position.y]);
 
-  const handleRegister = async () => {
+  const handleRegister = useCallback(async () => {
     if (!visitorInfo.name.trim()) {
       alert("Veuillez entrer votre nom");
       return;
@@ -178,9 +185,9 @@ export default function ChatWidget() {
     });
 
     setMessages([welcomeMsg]);
-  };
+  }, [visitorInfo.name, visitorInfo.email]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!message.trim() || !sessionId) return;
 
     const userMessage = addChatMessage(sessionId, {
@@ -192,7 +199,7 @@ export default function ChatWidget() {
       read: false
     });
 
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setMessage("");
     setIsTyping(true);
 
@@ -217,7 +224,43 @@ export default function ChatWidget() {
       setMessages(prev => [...prev, adminResponse]);
       setIsTyping(false);
     }, 1500);
-  };
+  }, [message, sessionId, visitorInfo.name, visitorInfo.email]);
+
+  const handleVisitorInfoChange = useCallback((field: 'name' | 'email', value: string) => {
+    setVisitorInfo(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+  }, []);
+
+  const handleToggleOpen = useCallback(() => {
+    if (!hasMoved) {
+      setIsOpen(true);
+    }
+  }, [hasMoved]);
+
+  const handleToggleMinimize = useCallback(() => {
+    setIsMinimized(prev => !prev);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const handleHeaderDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    setIsDragging(true);
+    setHasMoved(false);
+    setDragStart({
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    });
+  }, []);
 
   return (
     <>
@@ -236,11 +279,7 @@ export default function ChatWidget() {
           }}
         >
           <button
-            onClick={(e) => {
-              if (!hasMoved) {
-                setIsOpen(true);
-              }
-            }}
+            onClick={handleToggleOpen}
             className="relative group bg-gradient-to-br from-[#1a1a1f] to-[#0d0d10] border border-[#c8ff00]/30 hover:border-[#c8ff00]/60 text-white p-4 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-[#c8ff00]/20"
             style={{
               boxShadow: isDragging ? '0 25px 50px -12px rgba(200, 255, 0, 0.25)' : '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
@@ -276,26 +315,8 @@ export default function ChatWidget() {
           {/* Header */}
           <div
             className="bg-gradient-to-r from-[#1a1a1f] to-[#0d0d10] p-4 flex items-center justify-between border-b border-[#c8ff00]/20 cursor-move select-none touch-none"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const rect = e.currentTarget.getBoundingClientRect();
-              setIsDragging(true);
-              setHasMoved(false);
-              setDragStart({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-              });
-            }}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              const rect = e.currentTarget.getBoundingClientRect();
-              setIsDragging(true);
-              setHasMoved(false);
-              setDragStart({
-                x: e.touches[0].clientX - rect.left,
-                y: e.touches[0].clientY - rect.top
-              });
-            }}
+            onMouseDown={handleHeaderDragStart}
+            onTouchStart={handleHeaderDragStart}
           >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-[#c8ff00]/10 rounded-full flex items-center justify-center border border-[#c8ff00]/30">
@@ -312,13 +333,13 @@ export default function ChatWidget() {
             <div className="flex items-center space-x-2">
               <GripVertical className="w-4 h-4 text-[#c8ff00]/50" />
               <button
-                onClick={() => setIsMinimized(!isMinimized)}
+                onClick={handleToggleMinimize}
                 className="p-2 hover:bg-[#c8ff00]/10 rounded-lg transition-colors text-[#c8ff00]/70 hover:text-[#c8ff00]"
               >
                 {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="p-2 hover:bg-[#c8ff00]/10 rounded-lg transition-colors text-[#c8ff00]/70 hover:text-[#c8ff00]"
               >
                 <X className="w-4 h-4" />
@@ -347,14 +368,18 @@ export default function ChatWidget() {
                           type="text"
                           placeholder="Votre nom *"
                           value={visitorInfo.name}
-                          onChange={(e) => setVisitorInfo({ ...visitorInfo, name: e.target.value })}
+                          onChange={(e) => handleVisitorInfoChange('name', e.target.value)}
+                          onFocus={() => setIsInputFocused(true)}
+                          onBlur={() => setIsInputFocused(false)}
                           className="w-full bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                         />
                         <input
                           type="email"
                           placeholder="Votre email (optionnel)"
                           value={visitorInfo.email}
-                          onChange={(e) => setVisitorInfo({ ...visitorInfo, email: e.target.value })}
+                          onChange={(e) => handleVisitorInfoChange('email', e.target.value)}
+                          onFocus={() => setIsInputFocused(true)}
+                          onBlur={() => setIsInputFocused(false)}
                           className="w-full bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                         />
                         <button
@@ -416,8 +441,10 @@ export default function ChatWidget() {
                       <input
                         type="text"
                         value={message}
-                        onChange={(e) => setMessage(e.target.value)}
+                        onChange={handleMessageChange}
                         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        onFocus={() => setIsInputFocused(true)}
+                        onBlur={() => setIsInputFocused(false)}
                         placeholder="Écrivez votre message..."
                         className="flex-1 bg-[#1a1a1f] border border-[#c8ff00]/20 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#c8ff00]/50 focus:border-[#c8ff00]/50 transition-all"
                       />
