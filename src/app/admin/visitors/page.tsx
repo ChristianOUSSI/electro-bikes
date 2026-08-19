@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Users, MapPin, Clock, Monitor, Smartphone, Tablet } from "lucide-react";
-import { getVisitors } from "@/lib/admin";
+import { getVisitors } from "@/lib/analytics";
 import AdminLayout from "@/components/AdminLayout";
 
 export default function AdminVisitors() {
@@ -12,6 +12,9 @@ export default function AdminVisitors() {
 
   useEffect(() => {
     loadVisitors();
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadVisitors, 30000);
+    return () => clearInterval(interval);
   }, [filter]);
 
   const loadVisitors = () => {

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  Users, 
-  Eye, 
-  Clock, 
-  TrendingUp, 
-  ShoppingCart, 
+import {
+  Users,
+  Eye,
+  Clock,
+  TrendingUp,
+  ShoppingCart,
   CreditCard,
   MessageSquare,
   AlertCircle
 } from "lucide-react";
-import { getVisitors, getAnalyticsData, getAdminNotifications } from "@/lib/admin";
+import { getVisitors, getAnalyticsData } from "@/lib/analytics";
+import { getAdminNotifications } from "@/lib/admin";
 import { getOrders } from "@/lib/orders";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -24,6 +25,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadData();
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = () => {
@@ -44,18 +48,25 @@ export default function AdminDashboard() {
 
   const stats = [
     {
+      name: "Visiteurs actifs",
+      value: analytics?.visitors?.active || 0,
+      change: "En direct",
+      icon: Users,
+      color: "bg-blue-500"
+    },
+    {
       name: "Visiteurs aujourd'hui",
       value: analytics?.visitors?.total || 0,
       change: "+12%",
-      icon: Users,
-      color: "bg-blue-500"
+      icon: Eye,
+      color: "bg-green-500"
     },
     {
       name: "Pages vues",
       value: analytics?.pageViews || 0,
       change: "+8%",
       icon: Eye,
-      color: "bg-green-500"
+      color: "bg-teal-500"
     },
     {
       name: "Durée moyenne",
@@ -63,13 +74,6 @@ export default function AdminDashboard() {
       change: "+15%",
       icon: Clock,
       color: "bg-purple-500"
-    },
-    {
-      name: "Commandes",
-      value: orders.length,
-      change: "+5%",
-      icon: ShoppingCart,
-      color: "bg-orange-500"
     }
   ];
 

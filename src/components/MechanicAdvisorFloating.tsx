@@ -9,10 +9,10 @@ export default function MechanicAdvisorFloating({ locale }: { locale: string }) 
   const isFr = locale === "fr";
 
   return (
-    <div className="fixed bottom-6 right-6 z-40">
+    <div className="fixed bottom-6 right-6 z-30">
       {/* Expanded Popover */}
       {isOpen && (
-        <div className="mb-3 w-80 sm:w-96 rounded-3xl border border-zinc-800 bg-zinc-950/95 p-5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="mb-3 w-80 sm:w-96 rounded-3xl border border-zinc-800 bg-zinc-950/95 p-5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 z-30">
           <div className="flex items-start justify-between border-b border-zinc-800 pb-3">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -88,7 +88,7 @@ export default function MechanicAdvisorFloating({ locale }: { locale: string }) 
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center gap-3 rounded-full border border-lime-400/40 bg-zinc-950/90 px-4 py-2.5 text-xs font-bold text-white shadow-glow-lime backdrop-blur-md hover:bg-zinc-900 transition"
+        className="group flex items-center gap-3 rounded-full border border-lime-400/40 bg-zinc-950/90 px-4 py-2.5 text-xs font-bold text-white shadow-glow-lime backdrop-blur-md hover:bg-zinc-900 transition z-30"
       >
         <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-lime-400 text-zinc-950">
           <Wrench className="h-4 w-4" />

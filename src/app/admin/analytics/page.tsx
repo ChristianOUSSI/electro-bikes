@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Eye, 
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  Eye,
   Clock,
   Calendar,
   Download,
   RefreshCw
 } from "lucide-react";
-import { getAnalyticsData } from "@/lib/admin";
+import { getAnalyticsData } from "@/lib/analytics";
 import AdminLayout from "@/components/AdminLayout";
 
 export default function AdminAnalytics() {
@@ -21,6 +21,9 @@ export default function AdminAnalytics() {
 
   useEffect(() => {
     loadAnalytics();
+    // Refresh data every 30 seconds
+    const interval = setInterval(loadAnalytics, 30000);
+    return () => clearInterval(interval);
   }, [period]);
 
   const loadAnalytics = () => {

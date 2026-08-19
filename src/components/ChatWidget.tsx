@@ -24,34 +24,38 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Empêcher le clic si on commence à faire du drag
-    if (e.button !== 0) return; // Seul le clic gauche
-    
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
     const rect = e.currentTarget.getBoundingClientRect();
     setIsDragging(true);
     setHasMoved(false);
     setDragStart({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: clientX - rect.left,
+      y: clientY - rect.top
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging) return;
-    
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-    
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    const newX = clientX - dragStart.x;
+    const newY = clientY - dragStart.y;
+
     // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
     if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
       setHasMoved(true);
     }
-    
+
     // Keep button within viewport bounds
     const maxX = window.innerWidth - 80;
     const maxY = window.innerHeight - 80;
-    
+
     setPosition({
       x: Math.max(0, Math.min(newX, maxX)),
       y: Math.max(0, Math.min(newY, maxY))
@@ -69,18 +73,39 @@ export default function ChatWidget() {
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
-      
+
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
-      
+
       // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
       if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
         setHasMoved(true);
       }
-      
+
       const maxX = window.innerWidth - 80;
       const maxY = window.innerHeight - 80;
-      
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    };
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+
+      const touch = e.touches[0];
+      const newX = touch.clientX - dragStart.x;
+      const newY = touch.clientY - dragStart.y;
+
+      // Marquer qu'on a bougé si le mouvement est significatif (> 5px)
+      if (Math.abs(newX - position.x) > 5 || Math.abs(newY - position.y) > 5) {
+        setHasMoved(true);
+      }
+
+      const maxX = window.innerWidth - 80;
+      const maxY = window.innerHeight - 80;
+
       setPosition({
         x: Math.max(0, Math.min(newX, maxX)),
         y: Math.max(0, Math.min(newY, maxY))
@@ -95,11 +120,15 @@ export default function ChatWidget() {
     if (isDragging) {
       window.addEventListener('mousemove', handleGlobalMouseMove);
       window.addEventListener('mouseup', handleGlobalMouseUp);
+      window.addEventListener('touchmove', handleGlobalTouchMove);
+      window.addEventListener('touchend', handleGlobalMouseUp);
     }
 
     return () => {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+      window.removeEventListener('touchend', handleGlobalMouseUp);
     };
   }, [isDragging, dragStart, position]);
 
@@ -177,9 +206,8 @@ export default function ChatWidget() {
         <div
           ref={buttonRef}
           onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          className="fixed z-50 cursor-move"
+          onTouchStart={handleMouseDown}
+          className="fixed z-[9999] cursor-move touch-none"
           style={{
             right: position.x === 0 ? '1.5rem' : 'auto',
             bottom: position.y === 0 ? '1.5rem' : 'auto',
@@ -208,8 +236,8 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div 
-          className={`fixed bg-[#0d0d10] rounded-2xl shadow-2xl border border-[#c8ff00]/20 z-50 transition-all overflow-hidden ${
+        <div
+          className={`fixed bg-[#0d0d10] rounded-2xl shadow-2xl border border-[#c8ff00]/20 z-[9999] transition-all overflow-hidden ${
             isMinimized ? "w-80 h-16" : "w-96 h-[500px]"
           }`}
           style={{
@@ -221,8 +249,8 @@ export default function ChatWidget() {
           }}
         >
           {/* Header */}
-          <div 
-            className="bg-gradient-to-r from-[#1a1a1f] to-[#0d0d10] p-4 flex items-center justify-between border-b border-[#c8ff00]/20 cursor-move select-none"
+          <div
+            className="bg-gradient-to-r from-[#1a1a1f] to-[#0d0d10] p-4 flex items-center justify-between border-b border-[#c8ff00]/20 cursor-move select-none touch-none"
             onMouseDown={(e) => {
               e.preventDefault();
               const rect = e.currentTarget.getBoundingClientRect();
@@ -231,6 +259,16 @@ export default function ChatWidget() {
               setDragStart({
                 x: e.clientX - rect.left,
                 y: e.clientY - rect.top
+              });
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              const rect = e.currentTarget.getBoundingClientRect();
+              setIsDragging(true);
+              setHasMoved(false);
+              setDragStart({
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
               });
             }}
           >
