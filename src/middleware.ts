@@ -1,24 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
-import { defaultLocale, locales } from "@/i18n/config";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { isLocale, locales } from "@/i18n/config";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname;
 
-  const hasLocale = locales.some(
-    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
+  // Check if there is any supported locale in the pathname
+  const pathnameIsMissingLocale = locales.every(
+    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
   );
-  if (hasLocale) return NextResponse.next();
 
-  const acceptLanguage = request.headers.get("accept-language") ?? "";
-  const preferred = acceptLanguage.toLowerCase().startsWith("en")
-    ? "en"
-    : defaultLocale;
+  // Redirect if there is no locale
+  if (pathnameIsMissingLocale) {
+    // Skip admin routes from locale middleware
+    if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+      return NextResponse.next();
+    }
+    
+    const locale = "en"; // Default locale
+    return NextResponse.redirect(
+      new URL(`/${locale}${pathname}`, request.url)
+    );
+  }
 
-  const url = request.nextUrl.clone();
-  url.pathname = `/${preferred}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|favicon.ico|.*\\..*).*)"],
+  // Skip all paths that should not be internationalized
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

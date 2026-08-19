@@ -7,6 +7,9 @@ import { getDictionary } from "@/i18n/dictionaries";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MechanicAdvisorFloating from "@/components/MechanicAdvisorFloating";
+import VisitorTracker from "@/components/VisitorTracker";
+import ChatWidget from "@/components/ChatWidget";
+import Script from "next/script";
 
 const geistSans = localFont({
   src: "../fonts/GeistVF.woff",
@@ -28,7 +31,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://evolt-bikes.com"),
   title: {
-    default: "eVolt Apex — Vélos & Motos Électriques Haut de Gamme",
+    default: "eVolt Apex  Vélos & Motos Électriques Haut de Gamme",
     template: "%s | eVolt Apex",
   },
   description:
@@ -61,13 +64,19 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Electro Bikes",
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     alternateLocale: ["en_US"],
     url: "https://evolt-bikes.com",
     siteName: "eVolt Apex",
-    title: "eVolt Apex — Vélos & Motos Électriques Haut de Gamme",
+    title: "eVolt Apex  Vélos & Motos Électriques Haut de Gamme",
     description:
       "Performance instantanée, autonomie certifiée, 0 € d'essence. Découvrez la sélection d'élite de 2-roues électriques.",
     images: [
@@ -81,7 +90,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "eVolt Apex — Vélos & Motos Électriques Haut de Gamme",
+    title: "eVolt Apex  Vélos & Motos Électriques Haut de Gamme",
     description:
       "Performance instantanée, autonomie certifiée en conditions réelles et déduction directe du bonus écologique.",
     images: ["https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1200&q=80"],
@@ -107,10 +116,29 @@ export default function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-[#09090b] text-zinc-100 antialiased selection:bg-lime-400 selection:text-zinc-950`}
       >
+        <VisitorTracker />
         <Header locale={params.locale} dict={dict} />
         <main className="flex-1">{children}</main>
         <Footer dict={dict} locale={params.locale} />
         <MechanicAdvisorFloating locale={params.locale} />
+        <ChatWidget />
+        <Script
+          id="register-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                  }, function(err) {
+                    console.log('Service Worker registration failed:', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

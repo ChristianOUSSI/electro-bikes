@@ -105,7 +105,7 @@ export default function LegalPage({
               : "eVolt Apex Technologies SAS is covered by an official commercial dealer liability and financial escrow guarantee policy with:"}
           </p>
           <p className="font-semibold text-white">
-            AXA Assurances Entreprises — {isFr ? "Police d'assurance N° 8492019-RCPRO-EVOLT (Couverture jusqu'à 10 000 000 €)." : "Policy # 8492019-RCPRO-EVOLT (€10,000,000 total coverage)."}
+            AXA Assurances Entreprises  {isFr ? "Police d'assurance N° 8492019-RCPRO-EVOLT (Couverture jusqu'à 10 000 000 €)." : "Policy # 8492019-RCPRO-EVOLT (€10,000,000 total coverage)."}
           </p>
         </div>
       </div>

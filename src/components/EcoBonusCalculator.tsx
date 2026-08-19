@@ -106,7 +106,7 @@ export default function EcoBonusCalculator({
             >
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nom} — {formatPrice(p.prix, locale)}
+                  {p.nom}  {formatPrice(p.prix, locale)}
                 </option>
               ))}
             </select>
@@ -134,11 +134,10 @@ export default function EcoBonusCalculator({
                   key={c.code}
                   type="button"
                   onClick={() => setCountry(c.code)}
-                  className={`rounded-xl border p-2.5 text-xs font-medium transition text-center ${
-                    country === c.code
+                  className={`rounded-xl border p-2.5 text-xs font-medium transition text-center ${country === c.code
                       ? "border-lime-400 bg-lime-400/10 text-white shadow-sm"
                       : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   {c.label}
                 </button>

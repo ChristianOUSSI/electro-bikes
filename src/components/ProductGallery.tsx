@@ -30,12 +30,11 @@ export default function ProductGallery({
             key={src}
             type="button"
             onClick={() => setSelected(index)}
-            aria-label={`${alt} — ${index + 1}`}
-            className={`relative aspect-[4/3] overflow-hidden rounded-xl border transition ${
-              index === selected
+            aria-label={`${alt}  ${index + 1}`}
+            className={`relative aspect-[4/3] overflow-hidden rounded-xl border transition ${index === selected
                 ? "border-lime-400"
                 : "border-zinc-800 opacity-60 hover:opacity-100"
-            }`}
+              }`}
           >
             <Image
               src={src}

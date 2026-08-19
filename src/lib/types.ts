@@ -156,3 +156,123 @@ export interface CartItem {
   quantite: number;
   selectedOptions?: string[];
 }
+
+// Admin Types
+export interface AdminUser {
+  id: string;
+  email: string;
+  password: string; // En production, devrait être hashé
+  name: string;
+  role: "admin" | "superadmin";
+  createdAt: string;
+  lastLogin?: string;
+}
+
+export interface Visitor {
+  id: string;
+  sessionId: string;
+  ipAddress: string;
+  userAgent: string;
+  referer?: string;
+  landingPage: string;
+  currentPage?: string;
+  pagesVisited: string[];
+  duration: number; // en secondes
+  createdAt: string;
+  lastActivity: string;
+  location?: {
+    country: string;
+    city: string;
+    region: string;
+  };
+  device: {
+    type: "desktop" | "mobile" | "tablet";
+    os: string;
+    browser: string;
+  };
+}
+
+export interface ChatMessage {
+  id: string;
+  visitorId: string;
+  visitorName?: string;
+  visitorEmail?: string;
+  message: string;
+  isAdmin: boolean;
+  timestamp: string;
+  read: boolean;
+}
+
+export interface ChatSession {
+  id: string;
+  visitorId: string;
+  visitorName?: string;
+  visitorEmail?: string;
+  status: "active" | "closed" | "pending";
+  messages: ChatMessage[];
+  createdAt: string;
+  lastMessageAt: string;
+  assignedTo?: string; // admin ID
+}
+
+export interface PaymentNotification {
+  id: string;
+  orderId: string;
+  type: "full_payment" | "partial_payment" | "refund";
+  amount: number;
+  currency: string;
+  status: "completed" | "pending" | "failed";
+  paymentMethod: string;
+  transactionId?: string;
+  customerInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  createdAt: string;
+  processedAt?: string;
+  notes?: string;
+}
+
+export interface AnalyticsData {
+  period: string; // "today", "week", "month", "year"
+  visitors: {
+    total: number;
+    unique: number;
+    returning: number;
+  };
+  pageViews: number;
+  avgSessionDuration: number; // en secondes
+  bounceRate: number; // pourcentage
+  topPages: Array<{
+    page: string;
+    views: number;
+    uniqueVisitors: number;
+  }>;
+  trafficSources: Array<{
+    source: string;
+    visitors: number;
+    percentage: number;
+  }>;
+  devices: Array<{
+    type: string;
+    count: number;
+    percentage: number;
+  }>;
+  conversions: {
+    orders: number;
+    revenue: number;
+    conversionRate: number;
+  };
+}
+
+export interface AdminNotification {
+  id: string;
+  type: "new_order" | "payment" | "chat" | "low_stock" | "system";
+  title: string;
+  message: string;
+  priority: "low" | "medium" | "high" | "urgent";
+  read: boolean;
+  actionUrl?: string;
+  createdAt: string;
+}

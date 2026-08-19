@@ -59,7 +59,7 @@ export default function CgvPage({
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 space-y-3">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-lime-400" />
-            {isFr ? "Article 1 — Objet & Champ d'Application" : "Article 1 — Scope & Purpose"}
+            {isFr ? "Article 1  Objet & Champ d'Application" : "Article 1  Scope & Purpose"}
           </h2>
           <p>
             {isFr
@@ -72,7 +72,7 @@ export default function CgvPage({
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 space-y-3">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-cyan-400" />
-            {isFr ? "Article 2 — Prix & Déduction Immédiate des Aides d'État" : "Article 2 — Pricing & Instant Clean EV Rebates"}
+            {isFr ? "Article 2  Prix & Déduction Immédiate des Aides d'État" : "Article 2  Pricing & Instant Clean EV Rebates"}
           </h2>
           <p>
             {isFr
@@ -85,7 +85,7 @@ export default function CgvPage({
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 space-y-3">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Truck className="h-5 w-5 text-emerald-400" />
-            {isFr ? "Article 3 — Modalités de Livraison & Mise en Route Spécialisée" : "Article 3 — Specialized Delivery & 50-Point Setup"}
+            {isFr ? "Article 3  Modalités de Livraison & Mise en Route Spécialisée" : "Article 3  Specialized Delivery & 50-Point Setup"}
           </h2>
           <p>
             {isFr
@@ -98,7 +98,7 @@ export default function CgvPage({
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-6 space-y-3">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <RotateCcw className="h-5 w-5 text-amber-400" />
-            {isFr ? "Article 4 — Droit de Rétractation Légal (14 Jours)" : "Article 4 — 14-Day Statutory Return Policy"}
+            {isFr ? "Article 4  Droit de Rétractation Légal (14 Jours)" : "Article 4  14-Day Statutory Return Policy"}
           </h2>
           <p>
             {isFr

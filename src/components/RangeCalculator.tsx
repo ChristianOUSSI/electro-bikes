@@ -117,7 +117,7 @@ export default function RangeCalculator({
             >
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.brand} — {productName(p, locale)} ({p.autonomie_km} km / {p.vitesse_max} km/h)
+                  {p.brand}  {productName(p, locale)} ({p.autonomie_km} km / {p.vitesse_max} km/h)
                 </option>
               ))}
             </select>
@@ -150,11 +150,10 @@ export default function RangeCalculator({
                   key={m.id}
                   type="button"
                   onClick={() => setRidingStyle(m.id as typeof ridingStyle)}
-                  className={`rounded-xl p-2.5 text-center transition border ${
-                    ridingStyle === m.id
+                  className={`rounded-xl p-2.5 text-center transition border ${ridingStyle === m.id
                       ? "border-lime-400 bg-lime-400/10 text-lime-400 font-bold shadow-sm"
                       : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   <p className="text-xs font-bold">{m.label}</p>
                   <p className="text-[10px] text-zinc-500">{m.desc}</p>
@@ -240,11 +239,10 @@ export default function RangeCalculator({
                   key={tr.id}
                   type="button"
                   onClick={() => setTerrain(tr.id as typeof terrain)}
-                  className={`rounded-xl p-2.5 text-center transition border ${
-                    terrain === tr.id
+                  className={`rounded-xl p-2.5 text-center transition border ${terrain === tr.id
                       ? "border-emerald-400 bg-emerald-400/10 text-emerald-400 font-bold"
                       : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   <p className="text-xs font-bold">{tr.label}</p>
                   <p className="text-[10px] text-zinc-500">{tr.desc}</p>

@@ -1,4 +1,4 @@
-# eVolt — Plateforme e-commerce de vélos & motos électriques haut de gamme
+# eVolt  Plateforme e-commerce de vélos & motos électriques haut de gamme
 
 Boutique en ligne construite avec **Next.js 14 (App Router)**, **Tailwind CSS** et **Zustand**.
 
@@ -10,10 +10,10 @@ Boutique en ligne construite avec **Next.js 14 (App Router)**, **Tailwind CSS** 
 - **Panier** (`/[locale]/cart`) : persistant via Zustand + `localStorage`, modification des quantités, calcul automatique des totaux (sous-total, livraison, TVA).
 - **Checkout** (`/[locale]/checkout`) : formulaire de commande complet avec validation, paiement simulé et confirmation de commande.
 - **API simulée** :
-  - `GET /api/products` — catalogue avec filtres (`type`, `maxPrice`, `minRange`, `sort`)
-  - `GET /api/products/[id]` — détail d'un produit
-  - `POST /api/orders` — création d'une commande (validation du stock et des champs, calcul des totaux)
-  - `GET /api/orders` — liste des commandes (en mémoire)
+  - `GET /api/products`  catalogue avec filtres (`type`, `maxPrice`, `minRange`, `sort`)
+  - `GET /api/products/[id]`  détail d'un produit
+  - `POST /api/orders`  création d'une commande (validation du stock et des champs, calcul des totaux)
+  - `GET /api/orders`  liste des commandes (en mémoire)
 
 ## Modèles de données
 
@@ -33,7 +33,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000) (redirige vers `/fr` ou `/
 
 ## Scripts
 
-- `npm run dev` — serveur de développement
-- `npm run build` — build de production
-- `npm run start` — serveur de production
-- `npm run lint` — ESLint
+- `npm run dev`  serveur de développement
+- `npm run build`  build de production
+- `npm run start`  serveur de production
+- `npm run lint`  ESLint

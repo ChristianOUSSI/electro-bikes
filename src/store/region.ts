@@ -147,30 +147,34 @@ export const useRegionStore = create<RegionState>()(
             case "speed_pedelec":
               return { code: "Class 3", label: "Class 3 Speed e-Bike (28 mph / Helmet)", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" };
             case "AM":
-              return { code: "Moped / 50cc", label: "Standard Driver's License or Moped Permit", bg: "bg-blue-500/10 text-blue-400 border-blue-500/30" };
+              return { code: "Moped", label: "Standard Driver's License or Moped Permit", bg: "bg-blue-500/10 text-blue-400 border-blue-500/30" };
             case "A1_B":
             case "A2":
             case "A":
               return { code: "Class M", label: "Motorcycle Endorsement (Class M License)", bg: "bg-amber-500/10 text-amber-400 border-amber-500/30" };
             case "offroad":
-              return { code: "OHV Off-Road", label: "Off-Highway Vehicle (Private Property / Track Only)", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+              return { code: "Off-Road", label: "Off-Highway Vehicle (Private Property / Track Only)", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+            default:
+              return { code: "License", label: "License Required", bg: "bg-gray-500/10 text-gray-400 border-gray-500/30" };
           }
         }
 
         if (region === "CA") {
           switch (category) {
             case "none":
-              return { code: "Sans Permis", label: "Power-Assisted Bicycle (PAB / No License)", bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" };
+              return { code: "No License", label: "Power-Assisted Bicycle (PAB / No License)", bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" };
             case "speed_pedelec":
-              return { code: "Cyclomoteur 45km/h", label: "Class 6D or Standard Driver's License", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" };
+              return { code: "Class 6D", label: "Class 6D or Standard Driver's License", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" };
             case "AM":
               return { code: "Permis 6D", label: "Permis Apprenti ou Permis Auto", bg: "bg-blue-500/10 text-blue-400 border-blue-500/30" };
             case "A1_B":
             case "A2":
             case "A":
-              return { code: "Classe 6 Moto", label: "Permis Moto Classe 6 (6A/6B/6C)", bg: "bg-amber-500/10 text-amber-400 border-amber-500/30" };
+              return { code: "Class 6", label: "Permis Moto Classe 6 (6A/6B/6C)", bg: "bg-amber-500/10 text-amber-400 border-amber-500/30" };
             case "offroad":
-              return { code: "Hors-Route (VTT/Trail)", label: "Sentiers FQMHR & Terrains Privés Uniquement", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+              return { code: "Off-Road", label: "Sentiers FQMHR & Terrains Privés Uniquement", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+            default:
+              return { code: "License", label: "License Required", bg: "bg-gray-500/10 text-gray-400 border-gray-500/30" };
           }
         }
 
@@ -179,17 +183,19 @@ export const useRegionStore = create<RegionState>()(
           case "none":
             return { code: "Sans Permis", label: isFr ? "Sans Permis (Dès 14 ans)" : "No License Required", bg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" };
           case "speed_pedelec":
-            return { code: "Permis AM / B", label: isFr ? "Speed-Bike 45 km/h (Permis AM ou B)" : "Speed-Pedelec 45 km/h", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" };
+            return { code: "45 km/h", label: isFr ? "Speed-Bike 45 km/h (Permis AM ou B)" : "Speed-Pedelec 45 km/h", bg: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" };
           case "AM":
             return { code: "Permis AM", label: isFr ? "Équivalent 50cc (Permis AM dès 14 ans)" : "50cc Equivalent (AM License)", bg: "bg-blue-500/10 text-blue-400 border-blue-500/30" };
           case "A1_B":
-            return { code: "Permis A1 ou B + 7h", label: isFr ? "Équivalent 125cc (Permis A1 ou Permis B + formation 7h)" : "125cc Equivalent (A1 or B License)", bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" };
+            return { code: "125cc", label: isFr ? "Équivalent 125cc (Permis A1 ou Permis B + formation 7h)" : "125cc Equivalent (A1 or B License)", bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" };
           case "A2":
             return { code: "Permis A2", label: isFr ? "Moto A2 (Jusqu'à 35 kW / 47.6 ch)" : "A2 Motorcycle (Up to 35 kW)", bg: "bg-purple-500/10 text-purple-400 border-purple-500/30" };
           case "A":
             return { code: "Permis A", label: isFr ? "Permis A (Pleine Puissance > 35 kW)" : "Full Motorcycle License A", bg: "bg-amber-500/10 text-amber-400 border-amber-500/30" };
           case "offroad":
-            return { code: "Off-Road / Non Homologué", label: isFr ? "Terrain Privé & Circuit Uniquement (Non Homologué Route)" : "Private Property & Race Track Only", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+            return { code: "Off-Road", label: isFr ? "Terrain Privé & Circuit Uniquement (Non Homologué Route)" : "Private Property & Race Track Only", bg: "bg-red-500/10 text-red-400 border-red-500/30" };
+          default:
+            return { code: "License", label: "License Required", bg: "bg-gray-500/10 text-gray-400 border-gray-500/30" };
         }
       },
 

@@ -235,9 +235,9 @@ ${ITEMS_SPEC.map((p, idx) => {
   const reviewsCount = 15 + ((idx * 7) % 65);
 
   const currentStockStatus = (idx % 3 === 0) ? "in_showroom" : ((idx % 3 === 1) ? "in_transit" : "factory_order");
-  const deliveryLabelFr = currentStockStatus === "in_showroom" 
+  const deliveryLabelFr = currentStockStatus === "in_showroom"
     ? "En stock au Showroom Paris 17e • Livraison 48-72h par transporteur spécialisé 2-roues"
-    : (currentStockStatus === "in_transit" 
+    : (currentStockStatus === "in_transit"
       ? "En arrivage Plateforme Logistique Hub • Livraison 7 à 10 jours ouvrés"
       : "Sur commande atelier constructeur • Livraison 3 à 4 semaines avec mise en route");
   const deliveryLabelEn = currentStockStatus === "in_showroom"
@@ -281,7 +281,7 @@ ${ITEMS_SPEC.map((p, idx) => {
     poids_kg: ${p.weight},
     payload_kg: ${Math.round(p.weight * 0.9 + 80)},
     temps_charge_h: ${p.charge_h || 2.5},
-    moteur: ${JSON.stringify(p.motor_desc || `Moteur électrique haute efficacité ${p.kw_peak} kW crête — couple ${p.torque} Nm`)},
+    moteur: ${JSON.stringify(p.motor_desc || `Moteur électrique haute efficacité ${p.kw_peak} kW crête  couple ${p.torque} Nm`)},
     batterie: ${JSON.stringify(p.battery_desc || `Pack Li-ion ${p.kwh} kWh cellules haute densité (${p.cell || "Lithium-Ion NMC"})`)},
     battery_specs: {
       capacity_kwh: ${p.kwh},
@@ -335,19 +335,19 @@ ${ITEMS_SPEC.map((p, idx) => {
         title: ${JSON.stringify(idx % 3 === 0 ? "Couple monstrueux mais selle ferme sur longue distance" : idx % 3 === 1 ? "Livraison impeccable sur plateau et vraie autonomie" : "Une arme absolue en ville et sur petites routes")},
         title_en: ${JSON.stringify(idx % 3 === 0 ? "Insane instant torque, though seat is firm on longer trips" : idx % 3 === 1 ? "Flawless liftgate delivery and accurate range" : "Absolute weapon in city traffic and backroads")},
         comment: ${JSON.stringify(
-          idx % 3 === 0
-            ? "Accélération brutale et bluffante au feu vert ! La machine est ultra saine en courbe. Seul petit bémol : la selle d'origine est un peu ferme après 70 km, j'ai pris l'upgrade confort. Le chef d'atelier Thomas a été au top pour la remise des clés."
-            : idx % 3 === 1
-            ? "Livrée directement dans ma cour avec hayon hydraulique et plaque déjà rivetée. Sur autoroute à 110 km/h compter environ 20% d'autonomie en moins qu'en ville, ce qui est normal pour de l'électrique. Zéro regret face à mon ancienne thermique !"
-            : "Châssis rigide et freinage régénératif ultra puissant qui économise les plaquettes. Zéro entretien, zéro odeur d'essence dans le garage. C'est le futur."
-        )},
+    idx % 3 === 0
+      ? "Accélération brutale et bluffante au feu vert ! La machine est ultra saine en courbe. Seul petit bémol : la selle d'origine est un peu ferme après 70 km, j'ai pris l'upgrade confort. Le chef d'atelier Thomas a été au top pour la remise des clés."
+      : idx % 3 === 1
+        ? "Livrée directement dans ma cour avec hayon hydraulique et plaque déjà rivetée. Sur autoroute à 110 km/h compter environ 20% d'autonomie en moins qu'en ville, ce qui est normal pour de l'électrique. Zéro regret face à mon ancienne thermique !"
+        : "Châssis rigide et freinage régénératif ultra puissant qui économise les plaquettes. Zéro entretien, zéro odeur d'essence dans le garage. C'est le futur."
+  )},
         comment_en: ${JSON.stringify(
-          idx % 3 === 0
-            ? "Breathtaking instant pull off the line! Handling in corners is razor-sharp. Only minor grip: OEM seat is a bit stiff past 50 miles, so get the comfort upgrade. Thomas from the workshop was fantastic during delivery handover."
-            : idx % 3 === 1
-            ? "Delivered straight to my driveway with lift-gate truck and pre-fitted plate. Highway riding at 70 mph uses about 20% more battery than urban cruising, exactly as predicted by the simulator. Zero regrets leaving gas behind!"
-            : "Rigid chassis and exceptionally strong regen braking. Zero maintenance, zero oil fumes in the garage. Pure riding joy."
-        )},
+    idx % 3 === 0
+      ? "Breathtaking instant pull off the line! Handling in corners is razor-sharp. Only minor grip: OEM seat is a bit stiff past 50 miles, so get the comfort upgrade. Thomas from the workshop was fantastic during delivery handover."
+      : idx % 3 === 1
+        ? "Delivered straight to my driveway with lift-gate truck and pre-fitted plate. Highway riding at 70 mph uses about 20% more battery than urban cruising, exactly as predicted by the simulator. Zero regrets leaving gas behind!"
+        : "Rigid chassis and exceptionally strong regen braking. Zero maintenance, zero oil fumes in the garage. Pure riding joy."
+  )},
         real_range_tested_km: ${Math.round(p.range * (idx % 3 === 0 ? 0.88 : (idx % 3 === 1 ? 0.94 : 0.82)))},
         location: ${JSON.stringify(idx % 3 === 0 ? "Île-de-France" : idx % 3 === 1 ? "Auvergne-Rhône-Alpes" : "PACA")}
       }
